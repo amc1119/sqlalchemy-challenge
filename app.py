@@ -39,7 +39,7 @@ def welcome():
         f"/api/v1.0/precipitation<br/>"
         f"/api/v1.0/stations<br/>"
         f"/api/v1.0/tobs<br/>"
-        f"/api/v1.0/<start><br/>"
+#         f"/api/v1.0/<start><br/>"
         f"/api/v1.0/<start>/<end>"
     )
 
@@ -109,33 +109,39 @@ def temperature():
     return jsonify(dates_and_temps)
 
 @app.route("/api/v1.0/<start>")
-def pick_start(start):
+@app.route("/api/v1.0/<start>/<end>")
+def start_end(start=None, end=None):
     """Return a JSON list of the minimum temperature, the average temperature, and the maximum temperature 
-        for a specified start date, or a 404 if not."""
+        for a specified start date, or for a specific date range, or a 404 if date(s) not found."""
     
     # Create our session (link) from Python to the DB
     session = Session(engine)
     
-    # Search Measurement table for a specific date
-    start_date_found == session.query(Measurement.date).\
-        filter(Measurement.date == start).all()
+    # If no end date is entered
+    # Query the minimum temperature, the average temperature, and the maximum temperature for all dates greater than 
+    # or equal to a specified date
     
-    if start_date_found == start:
-           # Query the minimum temperature, the average temperature, and the maximum temperature beginning with a specified date
-            min_avg_max_temps = session.query(func.min(Measurement.tobs), func.avg(Measurement.tobs), 
-                                              func.max(Measurement.tobs)).\
-            filter(Measurement.date >= start).\
-            order_by(Measurement.date).all()
-            
-            session.close()
+    
+    # Search Measurement table for a specific date
+    date_picked == session.query(Measurement.date).filter(Measurement.date == start).all()
+    
+    for date in date_picked:
+    if date_picked == start:
+        # Query the minimum temperature, the average temperature, and the maximum temperature beginning with a specified date
+        min_avg_max_temps = session.query(func.min(Measurement.tobs), func.avg(Measurement.tobs), 
+                                          func.max(Measurement.tobs)).\
+        filter(Measurement.date >= start).\
+        order_by(Measurement.date).all()
 
-            # Return a JSON list of the minimum, average, and maximum temperature observations beginning with a specified date
-            temp_data = []
-            for temps in min_avg_max_temps:
-                temp_data.append(temps)
+        session.close()
 
-            return print(f"Date selected: {start}")
-            return jsonify(temp_data)
+        # Return a JSON list of the minimum, average, and maximum temperature observations beginning with a specified date
+        temp_data = []
+        for temps in min_avg_max_temps:
+            temp_data.append(temps)
+
+        return print(f"Date selected: {start}")
+        return jsonify(temp_data)
 
     return jsonify({"error": f"Date {start} not found."}), 404
 
