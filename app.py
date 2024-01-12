@@ -119,14 +119,11 @@ def start_end(start=None, end=None):
     
     # If no end date is entered
     # Query the minimum temperature, the average temperature, and the maximum temperature for all dates greater than 
-    # or equal to a specified date
+    # or equal to a specified date  
     
-    
-    # Search Measurement table for a specific date
-    date_picked == session.query(Measurement.date).filter(Measurement.date == start).all()
-    
-    for date in date_picked:
-    if date_picked == start:
+    # Search Measurement table for a specific date 
+    # If date selected is not found, return error code
+    if not end:
         # Query the minimum temperature, the average temperature, and the maximum temperature beginning with a specified date
         min_avg_max_temps = session.query(func.min(Measurement.tobs), func.avg(Measurement.tobs), 
                                           func.max(Measurement.tobs)).\
@@ -136,15 +133,27 @@ def start_end(start=None, end=None):
         session.close()
 
         # Return a JSON list of the minimum, average, and maximum temperature observations beginning with a specified date
-        temp_data = []
-        for temps in min_avg_max_temps:
-            temp_data.append(temps)
+        #temp_data = []
+        #for temps in min_avg_max_temps:
+        #    temp_data.append(temps)
+        temp_data = list(np.ravel(min_avg_max_temps))
 
-        return print(f"Date selected: {start}")
         return jsonify(temp_data)
+    
+    else:
+        # Query the minimum temperature, the average temperature, and the maximum temperature beginning with a specified date
+        min_avg_max_temps = session.query(func.min(Measurement.tobs), func.avg(Measurement.tobs), 
+                                          func.max(Measurement.tobs)).\
+        filter(Measurement.date >= start).\
+        filter(Measurement.date <= end).\
+        order_by(Measurement.date).all()
 
-    return jsonify({"error": f"Date {start} not found."}), 404
+        session.close()
 
+        # Return a JSON list of the minimum, average, and maximum temperature observations beginning with a specified date
+        temp_data = list(np.ravel(min_avg_max_temps))
+
+        return jsonify(temp_data)
 
 if __name__ == "__main__":
     app.run(debug=True)
